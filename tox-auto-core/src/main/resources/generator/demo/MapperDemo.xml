@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="{namespace}">
+
+    <sql id="fields">
+        {insertNames} status, create_time, update_time
+    </sql>
+    
+    <sql id="fields_id">
+        id, <include refid="fields"/>
+    </sql>
+
+    <sql id="table_name">{tableName}</sql>
+
+    <sql id="selector">
+        select <include refid="fields_id"/> from <include refid="table_name"/>
+    </sql>
+
+    <insert id="create" useGeneratedKeys="true" keyProperty="id">
+        insert into <include refid="table_name"/>(<include refid="fields"/>)
+        values({insertValues} 0, now(), now())
+    </insert>
+
+    <update id="update">
+        update
+          <include refid="table_name"/>
+        set
+          {updateSets}
+          update_time = now()
+        where
+          id = #{id}
+    </update>
+
+    <update id="delete">
+        update <include refid="table_name"/> set status = 1 where id = #{id}
+    </update>
+
+    <select id="getById" resultType="{className}">
+        <include refid="selector"/>
+        where id = #{id} and status = 0;
+    </select>
+
+    <select id="getBy" resultType="{className}">
+        <include refid="selector"/>
+        where
+            status = 0 {selectWheres}
+        order by id asc limit 0, 1;
+    </select>
+
+    <select id="countAll" resultType="int">
+        select
+          count(1)
+        from
+          <include refid="table_name"/>
+        where
+            status = 0 {selectWheres}
+    </select>
+
+    <select id="listByPage" resultType="{className}">
+        <include refid="selector"/>
+        where
+            status = 0 {selectWheresPage}
+        limit #{startRow}, #{pageSize}
+    </select>
+</mapper>
